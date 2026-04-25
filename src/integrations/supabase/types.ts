@@ -43,6 +43,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          age: number | null
           age_range: string | null
           budget: string | null
           created_at: string
@@ -54,12 +55,14 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           onboarding_completed: boolean
+          other_interests: string | null
           transportation: string | null
           updated_at: string
           user_id: string
           weekly_schedule_context: string | null
         }
         Insert: {
+          age?: number | null
           age_range?: string | null
           budget?: string | null
           created_at?: string
@@ -71,12 +74,14 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           onboarding_completed?: boolean
+          other_interests?: string | null
           transportation?: string | null
           updated_at?: string
           user_id: string
           weekly_schedule_context?: string | null
         }
         Update: {
+          age?: number | null
           age_range?: string | null
           budget?: string | null
           created_at?: string
@@ -88,6 +93,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           onboarding_completed?: boolean
+          other_interests?: string | null
           transportation?: string | null
           updated_at?: string
           user_id?: string
