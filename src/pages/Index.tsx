@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/needly/Logo";
+import { ThemeToggle } from "@/components/needly/ThemeToggle";
 import { MapPin, Sparkles, Bookmark, Compass } from "lucide-react";
 
 const steps = [
@@ -16,9 +17,12 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-soft">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
-        <Link to="/auth?mode=login">
-          <Button variant="ghost">Log In</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link to="/auth?mode=login">
+            <Button variant="ghost">Log In</Button>
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-6 pt-16 pb-24 text-center">

@@ -3,6 +3,7 @@ import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Home, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { pathname } = useLocation();
@@ -34,6 +35,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
         <nav className="flex items-center gap-1">
           <NavBtn to="/dashboard" icon={Home} label="Dashboard" />
           <NavBtn to="/saved" icon={Bookmark} label="Saved" />
+          <ThemeToggle />
           <Button variant="ghost" size="sm" onClick={logout} className="ml-2 text-muted-foreground">
             <LogOut className="h-4 w-4" />
           </Button>
