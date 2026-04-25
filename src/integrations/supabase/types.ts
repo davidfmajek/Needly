@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      saved_places: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          place_name: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          place_name: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          place_name?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          age_range: string | null
+          budget: string | null
+          created_at: string
+          dietary_restrictions: string[] | null
+          food_preferences: string[] | null
+          id: string
+          initial_context: string | null
+          interests: string[] | null
+          latitude: number | null
+          longitude: number | null
+          onboarding_completed: boolean
+          transportation: string | null
+          updated_at: string
+          user_id: string
+          weekly_schedule_context: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          budget?: string | null
+          created_at?: string
+          dietary_restrictions?: string[] | null
+          food_preferences?: string[] | null
+          id?: string
+          initial_context?: string | null
+          interests?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          onboarding_completed?: boolean
+          transportation?: string | null
+          updated_at?: string
+          user_id: string
+          weekly_schedule_context?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          budget?: string | null
+          created_at?: string
+          dietary_restrictions?: string[] | null
+          food_preferences?: string[] | null
+          id?: string
+          initial_context?: string | null
+          interests?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          onboarding_completed?: boolean
+          transportation?: string | null
+          updated_at?: string
+          user_id?: string
+          weekly_schedule_context?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
