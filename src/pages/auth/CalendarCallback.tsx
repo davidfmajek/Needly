@@ -10,13 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Status = "processing" | "success" | "error";
 
-// Landing page that the user is redirected to after granting calendar
-// permission to a third-party provider (e.g. Google). The provider hands us
-// either an `?code=` to exchange for tokens server-side, or an `?error=`.
-//
-// Token exchange is deliberately delegated to a future Supabase edge
-// function — this page just records the *intent* to connect and surfaces
-// the result to the user. That keeps secrets out of the browser bundle.
 const CalendarCallback = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -46,15 +39,11 @@ const CalendarCallback = () => {
     }
 
     (async () => {
-      // Record a stub connection so the rest of the UI can reflect that the
-      // user has *started* the connection flow. The token exchange itself
-      // needs to happen on a trusted backend — wire that in via a Supabase
-      // edge function and update this row when the exchange completes.
       const { error: insertError } = await supabase.from("user_calendar_connections").upsert(
         {
           user_id: user.id,
           provider,
-          email: state, // some providers stuff the email back via `state`
+          email: state,
         },
         { onConflict: "user_id" },
       );

@@ -53,7 +53,6 @@ function findFreeBlocks(row: ScheduleCell[]): FreeBlock[] {
     }
   }
   if (start !== null) blocks.push({ start, end: 24 });
-  // Only show meaningful gaps (>= 1h) during waking hours.
   return blocks.filter((b) => b.end - b.start >= 1 && b.end > 6 && b.start < 23);
 }
 
@@ -143,7 +142,6 @@ const MyDay = () => {
           <EmptyState scheduleText={scheduleText} />
         ) : (
           <>
-            {/* Pocket-of-time suggestions */}
             {freeBlocks.length > 0 && (
               <section className="mt-8">
                 <h2 className="text-lg font-semibold">Pockets of free time</h2>
@@ -182,7 +180,6 @@ const MyDay = () => {
               </section>
             )}
 
-            {/* Hour-by-hour timeline */}
             <section className="mt-10">
               <h2 className="text-lg font-semibold">Timeline</h2>
               <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, Check, ExternalLink, Loader2, MapPin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { Drawer } from "@/components/ui/Drawer";
+import { Drawer } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -24,7 +24,23 @@ type CalendarConnection = {
 
 const TRANSPORT_OPTIONS = ["Walking", "Bike", "Transit", "Car", "Rideshare"];
 const BUDGET_OPTIONS = ["$", "$$", "$$$", "$$$$"];
-const INTERESTS = ["Gym", "School", "Nightlife", "Sporting Events", "Coffee", "Outdoors", "Shopping", "Art", "Music"];
+const INTERESTS = [
+  "Gym",
+  "School",
+  "Nightlife",
+  "Sporting Events",
+  "Coffee",
+  "Outdoors",
+  "Shopping",
+  "Art",
+  "Music",
+  "Gaming",
+  "Travel",
+  "Books",
+  "Tech",
+  "Movies",
+  "Volunteering",
+];
 const DIET = ["None", "Vegetarian", "Vegan", "Gluten-free", "Halal", "Kosher", "Dairy-free"];
 
 const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
@@ -52,6 +68,7 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
   const [transport, setTransport] = useState("");
   const [budget, setBudget] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [otherInterests, setOtherInterests] = useState("");
   const [diet, setDiet] = useState<string[]>([]);
   const [week, setWeek] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -71,7 +88,7 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
         supabase
           .from("user_profiles")
           .select(
-            "display_name, age, transportation, budget, interests, dietary_restrictions, weekly_schedule_context, latitude, longitude",
+            "display_name, age, transportation, budget, interests, other_interests, dietary_restrictions, weekly_schedule_context, latitude, longitude",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -88,6 +105,7 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
         setTransport(profile.transportation ?? "");
         setBudget(profile.budget ?? "");
         setInterests(profile.interests ?? []);
+        setOtherInterests(profile.other_interests ?? "");
         setDiet(profile.dietary_restrictions ?? []);
         setWeek(profile.weekly_schedule_context ?? "");
         if (profile.latitude != null && profile.longitude != null) {
@@ -119,6 +137,7 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
         transportation: transport || null,
         budget: budget || null,
         interests,
+        other_interests: otherInterests.trim() || null,
         dietary_restrictions: diet,
         weekly_schedule_context: trimmedWeek || null,
         weekly_schedule_grid: grid,
@@ -219,6 +238,14 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
                   {d}
                 </Chip>
               ))}
+            </div>
+            <div className="space-y-2">
+              <Label>Other interests</Label>
+              <Input
+                placeholder="e.g. photography, board games, hiking"
+                value={otherInterests}
+                onChange={(e) => setOtherInterests(e.target.value)}
+              />
             </div>
           </section>
 

@@ -149,12 +149,83 @@ export type Database = {
         }
         Relationships: []
       }
+      user_recommendation_events: {
+        Row: {
+          category: string | null
+          created_at: string
+          event_type: string
+          id: string
+          intent: string | null
+          latitude: number | null
+          longitude: number | null
+          metadata: Json
+          place_id: string | null
+          place_name: string | null
+          user_id: string
+          zone_label: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          intent?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
+          place_id?: string | null
+          place_name?: string | null
+          user_id: string
+          zone_label?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          intent?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
+          place_id?: string | null
+          place_name?: string | null
+          user_id?: string
+          zone_label?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      user_place_affinities: {
+        Row: {
+          affinity_score: number | null
+          category: string | null
+          last_interacted_at: string | null
+          last_intent: string | null
+          last_zone_label: string | null
+          place_id: string | null
+          place_name: string | null
+          total_events: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      user_zone_affinities: {
+        Row: {
+          last_interacted_at: string | null
+          total_events: number | null
+          user_id: string | null
+          zone_label: string | null
+          zone_score: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      refresh_user_personalization_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

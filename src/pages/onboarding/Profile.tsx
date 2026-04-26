@@ -15,7 +15,23 @@ import { MapPin, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { hourlyGridFromText } from "@/lib/weeklyScheduleFromText";
 
 const DIET = ["None", "Vegetarian", "Vegan", "Gluten-free", "Halal", "Kosher", "Dairy-free"];
-const INTERESTS = ["Gym", "School", "Nightlife", "Sporting Events", "Coffee", "Outdoors", "Shopping", "Art", "Music"];
+const INTERESTS = [
+  "Gym",
+  "School",
+  "Nightlife",
+  "Sporting Events",
+  "Coffee",
+  "Outdoors",
+  "Shopping",
+  "Art",
+  "Music",
+  "Gaming",
+  "Travel",
+  "Books",
+  "Tech",
+  "Movies",
+  "Volunteering",
+];
 const FOODS = ["Fast food", "American", "Italian", "Mexican", "Asian", "Mediterranean", "Healthy", "Desserts"];
 const STEPS = ["About you", "Preferences", "Lifestyle", "Location"];
 
