@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { hourlyGridFromText } from "@/lib/weeklyScheduleFromText";
+import { emitScheduleUpdated } from "@/hooks/useWeeklySchedule";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -148,6 +149,7 @@ export const SettingsDrawer = ({ open, onClose }: SettingsDrawerProps) => {
     );
     setSaving(false);
     if (error) return toast.error(error.message);
+    emitScheduleUpdated();
     toast.success("Settings saved");
     onClose();
   };

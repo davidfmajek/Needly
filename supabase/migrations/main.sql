@@ -429,3 +429,96 @@ EXCEPTION
   WHEN others THEN
     NULL;
 END $$;
+
+-- user_day_tasks
+-- One-off tasks the user wants to get done on a given day. Supplies_query
+-- (when set) gives the places-nearby edge function a hint for surfacing the
+-- right hardware/grocery/etc. spot.
+CREATE TABLE IF NOT EXISTS public.user_day_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  task_date DATE NOT NULL,
+  title TEXT NOT NULL,
+  notes TEXT,
+  start_hour INTEGER,
+  end_hour INTEGER,
+  supplies_query TEXT,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT user_day_tasks_start_hour_check CHECK (start_hour IS NULL OR (start_hour >= 0 AND start_hour <= 24)),
+  CONSTRAINT user_day_tasks_end_hour_check   CHECK (end_hour   IS NULL OR (end_hour   >= 0 AND end_hour   <= 24))
+);
+
+ALTER TABLE public.user_day_tasks
+  ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL,
+  ADD COLUMN IF NOT EXISTS task_date DATE NOT NULL,
+  ADD COLUMN IF NOT EXISTS title TEXT NOT NULL,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS start_hour INTEGER,
+  ADD COLUMN IF NOT EXISTS end_hour INTEGER,
+  ADD COLUMN IF NOT EXISTS supplies_query TEXT,
+  ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+ALTER TABLE public.user_day_tasks ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_day_tasks'
+      AND policyname = 'Users view own day tasks'
+  ) THEN
+    CREATE POLICY "Users view own day tasks"
+      ON public.user_day_tasks
+      FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_day_tasks'
+      AND policyname = 'Users insert own day tasks'
+  ) THEN
+    CREATE POLICY "Users insert own day tasks"
+      ON public.user_day_tasks
+      FOR INSERT
+      WITH CHECK (auth.uid() = user_id);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_day_tasks'
+      AND policyname = 'Users update own day tasks'
+  ) THEN
+    CREATE POLICY "Users update own day tasks"
+      ON public.user_day_tasks
+      FOR UPDATE
+      USING (auth.uid() = user_id);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'user_day_tasks'
+      AND policyname = 'Users delete own day tasks'
+  ) THEN
+    CREATE POLICY "Users delete own day tasks"
+      ON public.user_day_tasks
+      FOR DELETE
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS user_day_tasks_user_date_idx
+  ON public.user_day_tasks (user_id, task_date);
+
+DROP TRIGGER IF EXISTS update_user_day_tasks_updated_at ON public.user_day_tasks;
+CREATE TRIGGER update_user_day_tasks_updated_at
+BEFORE UPDATE ON public.user_day_tasks
+FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

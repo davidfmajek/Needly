@@ -8,6 +8,8 @@ import { Bookmark, Heart, MapPin, Sparkles, Search, ArrowRight, ChevronRight, Na
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useWeeklySchedule } from "@/hooks/useWeeklySchedule";
+import { formatHour, scheduleLabelToIntent, labelTitle } from "@/lib/scheduleHelpers";
 import { toast } from "sonner";
 
 /* ─── Types ─── */
@@ -180,6 +182,66 @@ const VIBE_MAP: Record<string, { iconText: string; label: string }> = {
   "Sporting Events": { iconText: "SP", label: "Sports" },
 };
 
+/* Map a recommendation event's category/intent text to one of the VIBE_MAP
+ * interests, so we can roll real behavior back up to the bars in Your Vibe. */
+const VIBE_KEYWORD_MATCHERS: { interest: keyof typeof VIBE_MAP; tokens: string[] }[] = [
+  { interest: "Coffee",          tokens: ["coffee", "café", "cafe", "espresso", "latte"] },
+  { interest: "Gym",             tokens: ["gym", "fitness", "workout", "yoga", "pilates"] },
+  { interest: "School",          tokens: ["library", "study", "school", "campus", "coworking"] },
+  { interest: "Nightlife",       tokens: ["bar", "club", "nightlife", "lounge", "cocktail", "nightout"] },
+  { interest: "Outdoors",        tokens: ["park", "outdoor", "trail", "garden", "hike"] },
+  { interest: "Shopping",        tokens: ["shop", "store", "market", "boutique", "mall"] },
+  { interest: "Art",             tokens: ["museum", "gallery", "art", "exhibit", "culture"] },
+  { interest: "Music",           tokens: ["music", "concert", "live", "vinyl", "venue"] },
+  { interest: "Sporting Events", tokens: ["sport", "stadium", "arena", "game"] },
+];
+
+function matchVibeInterest(text: string | null | undefined): keyof typeof VIBE_MAP | null {
+  if (!text) return null;
+  const haystack = text.toLowerCase();
+  for (const { interest, tokens } of VIBE_KEYWORD_MATCHERS) {
+    if (tokens.some((t) => haystack.includes(t))) return interest;
+  }
+  return null;
+}
+
+/* Weight events by intent so a save means more than an impression. Mirrors
+ * the weights used by the user_place_affinities materialized view. */
+const EVENT_WEIGHTS: Record<string, number> = {
+  open_directions: 5,
+  save: 4,
+  result_click: 2,
+  intent_selected: 1.5,
+  result_impression: 0.5,
+  unsave: -1,
+};
+
+/* Predict what the user will likely need before/around their next agenda
+ * item, so the dashboard can preload a relevant recommendation strip. */
+function nextAgendaSuggestion(label: string, hour: number): { phrase: string; intent: string; query: string } | null {
+  const intent = scheduleLabelToIntent(label);
+  if (!intent) return null;
+  const pretty = labelTitle(label);
+  const at = formatHour(hour);
+  // Choose phrasing that reflects "before" vs "during" the activity.
+  if (label === "class" || label === "work" || label === "study") {
+    return { phrase: `Coffee before ${pretty.toLowerCase()} at ${at}`, intent: "coffee", query: "" };
+  }
+  if (label === "gym") {
+    return { phrase: `Pre-gym fuel before ${at}`, intent: "food", query: "smoothie snack" };
+  }
+  if (label === "lunch" || label === "dinner" || label === "brunch") {
+    return { phrase: `${pretty} spots near you`, intent: "food", query: label };
+  }
+  if (label === "nightlife" || label === "date") {
+    return { phrase: `Dinner before ${pretty.toLowerCase()}`, intent: "food", query: "dinner" };
+  }
+  if (label === "commute") {
+    return { phrase: `Coffee for the commute`, intent: "coffee", query: "" };
+  }
+  return { phrase: `Recommended for ${pretty.toLowerCase()} at ${at}`, intent, query: "" };
+}
+
 /* ─── Top pick ─── */
 const TOP_PICK = {
   name: "Bluestone Café",
@@ -282,7 +344,12 @@ const Dashboard = () => {
   const [loadingResults, setLoadingResults] = useState(false);
   const [savedSpots, setSavedSpots] = useState<SavedPlace[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const [vibeStrengths, setVibeStrengths] = useState<Record<string, number>>({});
+  const [agendaPhrase, setAgendaPhrase] = useState<string | null>(null);
+  const agendaTriedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { grid: weeklyGrid } = useWeeklySchedule();
 
   const placeholder = useRotatingPlaceholder();
   const now = new Date();
@@ -346,6 +413,44 @@ const Dashboard = () => {
       const { data } = await supabase.from("saved_places").select("id, place_name, category").order("created_at", { ascending: false }).limit(10);
       if (data) setSavedSpots(data);
     })();
+  }, [user]);
+
+  // Compute Your Vibe strengths from real recommendation behavior. We aggregate
+  // recent events by interest and normalize the top one to ~95% so the bars
+  // tell a real story instead of decorating mock data.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("user_recommendation_events")
+        .select("category, intent, event_type, place_name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (cancelled) return;
+      const totals: Record<string, number> = {};
+      for (const event of data ?? []) {
+        const text = event.category ?? event.intent ?? event.place_name ?? "";
+        const interest = matchVibeInterest(text);
+        if (!interest) continue;
+        const weight = EVENT_WEIGHTS[event.event_type] ?? 0.5;
+        totals[interest] = (totals[interest] ?? 0) + weight;
+      }
+      const max = Math.max(...Object.values(totals), 0);
+      if (max === 0) {
+        setVibeStrengths({});
+        return;
+      }
+      const next: Record<string, number> = {};
+      for (const [interest, score] of Object.entries(totals)) {
+        next[interest] = Math.max(40, Math.min(95, Math.round((score / max) * 95)));
+      }
+      setVibeStrengths(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const isPlaceSaved = (placeName: string) =>
@@ -412,18 +517,23 @@ const Dashboard = () => {
 
   const timePills = getInterestPills(interests);
 
-  const onPickNext = (option: string, fromSearch = false) => {
+  const onPickNext = (
+    option: string,
+    fromSearch = false,
+    override?: { intent?: string; query?: string },
+  ) => {
     setSelectedNext(option);
     setLastWasSearch(fromSearch);
     setResults(null);
     setLoadingResults(true);
-    const key = getResultKey(option);
+    const key = override?.intent ?? getResultKey(option);
+    const queryText = override?.query ?? (fromSearch ? option : "");
     (async () => {
       await logRecommendationEvent("intent_selected", undefined, { option, fromSearch });
       const { data, error } = await supabase.functions.invoke("places-nearby", {
         body: {
           intent: key,
-          query: fromSearch ? option : "",
+          query: queryText,
           limit: 9,
         },
       });
@@ -454,6 +564,34 @@ const Dashboard = () => {
     onPickNext(q, true);
     setSearchValue("");
   };
+
+  // "Recommended for next thing on agenda" — when the schedule grid is loaded
+  // and the user hasn't picked anything yet, scan the rest of today for the
+  // next non-free hour and quietly preload places for that activity.
+  useEffect(() => {
+    if (!weeklyGrid) return;
+    if (agendaTriedRef.current) return;
+    if (selectedNext || results) return;
+    const now = new Date();
+    const todayRow = weeklyGrid.cells[now.getDay()];
+    if (!todayRow) return;
+    let nextHour = -1;
+    let nextLabel: string | null = null;
+    for (let h = now.getHours() + 1; h < 24; h++) {
+      const cell = todayRow[h];
+      if (cell) {
+        nextHour = h;
+        nextLabel = cell;
+        break;
+      }
+    }
+    if (!nextLabel) return;
+    const suggestion = nextAgendaSuggestion(nextLabel.toLowerCase(), nextHour);
+    if (!suggestion) return;
+    agendaTriedRef.current = true;
+    setAgendaPhrase(suggestion.phrase);
+    onPickNext(suggestion.phrase, false, { intent: suggestion.intent, query: suggestion.query });
+  }, [weeklyGrid, selectedNext, results]);
 
   return (
     <AppShell>
@@ -580,7 +718,14 @@ const Dashboard = () => {
       <AnimatePresence mode="wait">
         {results && (
           <motion.div key={selectedNext} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-10">
-            <h2 className="text-lg font-semibold">Recommended for "{selectedNext}"</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold">Recommended for "{selectedNext}"</h2>
+              {selectedNext === agendaPhrase && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  <Sparkles className="h-3 w-3" /> From your agenda
+                </span>
+              )}
+            </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               {results.map((r, i) => (
                 <motion.div key={r.name} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.12, ease }}
@@ -701,19 +846,23 @@ const Dashboard = () => {
         )}
       </section>
 
-      {/* ── Your Vibe — Preference Strength ── */}
+      {/* ── Your Vibe — Preference Strength (data-driven) ── */}
       {interests.length > 0 && (
         <section className="mt-10 rounded-2xl border border-border/70 bg-card/50 p-4 md:p-5">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold tracking-tight">Your Vibe</h2>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Preference Strength</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              {Object.keys(vibeStrengths).length > 0 ? "Based on saves & taps" : "Preference Strength"}
+            </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {interests.slice(0, 6).map((interest, i) => {
               const vibe = VIBE_MAP[interest];
               if (!vibe) return null;
-              // Mock strength: first interests are "stronger"
-              const strength = Math.max(95 - i * 12, 40);
+              // Real strength when we have behavioral data, otherwise a soft
+              // baseline that decays from the order of selection.
+              const realStrength = vibeStrengths[interest];
+              const strength = realStrength ?? Math.max(70 - i * 8, 40);
               return (
                 <motion.div
                   key={interest}

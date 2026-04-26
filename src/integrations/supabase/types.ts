@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_day_tasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          end_hour: number | null
+          id: string
+          notes: string | null
+          start_hour: number | null
+          supplies_query: string | null
+          task_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          end_hour?: number | null
+          id?: string
+          notes?: string | null
+          start_hour?: number | null
+          supplies_query?: string | null
+          task_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          end_hour?: number | null
+          id?: string
+          notes?: string | null
+          start_hour?: number | null
+          supplies_query?: string | null
+          task_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_calendar_connections: {
         Row: {
           access_token: string | null

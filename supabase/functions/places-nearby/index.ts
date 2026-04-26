@@ -20,6 +20,7 @@ type Intent =
   | "outdoors"
   | "chill"
   | "culture"
+  | "supplies"
   | "default";
 
 interface Body {
@@ -59,12 +60,18 @@ const INTENT_CONFIG: Record<Intent, { keyword?: string; types: string[]; categor
   outdoors: { keyword: "park outdoors", types: ["park"], categoryLabel: "Outdoors" },
   chill: { keyword: "cafe park lounge", types: ["cafe", "park"], categoryLabel: "Chill Spot" },
   culture: { keyword: "museum gallery exhibit", types: ["museum", "art_gallery"], categoryLabel: "Museum" },
+  supplies: {
+    keyword: "hardware home improvement lumber tools",
+    types: ["hardware_store", "home_goods_store", "store"],
+    categoryLabel: "Supplies",
+  },
   default: { keyword: "restaurant cafe", types: ["restaurant", "cafe"], categoryLabel: "Nearby" },
 };
 
 function inferIntentFromQuery(query: string): Intent | null {
   const q = query.trim().toLowerCase();
   if (!q) return null;
+  if (/(hardware|lumber|nails?|screws?|tools?|drill|wood|paint|tile|grout|hammer|build|fix|repair|assemble|install|sand|diy)/.test(q)) return "supplies";
   if (/(museum|mesuem|gallery|art exhibit|exhibit|history center)/.test(q)) return "culture";
   if (/(gym|workout|fitness|lift|exercise)/.test(q)) return "gym";
   if (/(class|study|library|campus|school)/.test(q)) return "study";

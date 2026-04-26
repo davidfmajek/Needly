@@ -150,6 +150,42 @@
   }
 }
 
+/* ─── Theme transition (light ↔ dark) ─────────────────────────────
+ * Browsers that support the View Transitions API get a slow, butter-smooth
+ * crossfade of the whole document when the theme toggles.
+ * Browsers that don't fall back to fading just the surfaces that read theme
+ * variables, gated behind a `theme-transitioning` class so it doesn't slow
+ * down ordinary hover/focus transitions.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 700ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pause clashing animations during the swap so the cross-fade reads cleanly. */
+::view-transition-old(root) {
+  animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
+}
+
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning *:not(svg):not(svg *) {
+  transition:
+    background-color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    fill 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Dialog backdrop */
 dialog::backdrop {
   background: hsl(var(--foreground) / 0.5);
