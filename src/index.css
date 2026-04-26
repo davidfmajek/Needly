@@ -2,9 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/*
+ * Needly Design System
+ * All colors use HSL values. Gradients & shadows use CSS custom properties.
+ */
 
 @layer base {
   :root {
@@ -20,7 +21,6 @@ All colors MUST be HSL.
 
     --primary: 150 45% 32%;
     --primary-foreground: 40 50% 98%;
-    --primary-glow: 145 50% 50%;
 
     --secondary: 90 25% 92%;
     --secondary-foreground: 150 30% 18%;
@@ -44,23 +44,6 @@ All colors MUST be HSL.
     --gradient-soft: linear-gradient(180deg, hsl(40 45% 96%), hsl(130 35% 92%));
     --shadow-soft: 0 4px 24px -8px hsl(150 45% 25% / 0.18);
     --shadow-glow: 0 10px 40px -10px hsl(145 50% 45% / 0.35);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -76,7 +59,6 @@ All colors MUST be HSL.
 
     --primary: 220 85% 62%;
     --primary-foreground: 222 47% 11%;
-    --primary-glow: 245 80% 68%;
 
     --secondary: 222 30% 16%;
     --secondary-foreground: 210 40% 98%;
@@ -98,14 +80,6 @@ All colors MUST be HSL.
     --gradient-soft: linear-gradient(180deg, hsl(222 45% 7%), hsl(225 50% 11%));
     --shadow-soft: 0 4px 24px -8px hsl(220 85% 50% / 0.35);
     --shadow-glow: 0 10px 40px -10px hsl(245 80% 60% / 0.5);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -114,7 +88,99 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  /* Glassmorphism card */
+  .glass {
+    @apply border border-border/50;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  /* Glassmorphism - more prominent */
+  .glass-strong {
+    @apply border border-border/40;
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+@layer utilities {
+  /* Focus ring utility */
+  .focus-ring {
+    @apply outline-none ring-2 ring-ring/40 ring-offset-2 ring-offset-background;
+  }
+
+  /* Transition presets */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-bounce {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+/* Dialog backdrop */
+dialog::backdrop {
+  background: hsl(var(--foreground) / 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Drawer overlay */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: hsl(var(--foreground) / 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
 }

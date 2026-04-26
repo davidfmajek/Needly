@@ -41,6 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_calendar_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          email: string | null
+          expires_at: string | null
+          id: string
+          provider: string
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          provider: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           age: number | null
@@ -48,7 +87,9 @@ export type Database = {
           budget: string | null
           created_at: string
           dietary_restrictions: string[] | null
+          display_name: string | null
           food_preferences: string[] | null
+          gender: string | null
           id: string
           initial_context: string | null
           interests: string[] | null
@@ -60,6 +101,7 @@ export type Database = {
           updated_at: string
           user_id: string
           weekly_schedule_context: string | null
+          weekly_schedule_grid: Json | null
         }
         Insert: {
           age?: number | null
@@ -67,7 +109,9 @@ export type Database = {
           budget?: string | null
           created_at?: string
           dietary_restrictions?: string[] | null
+          display_name?: string | null
           food_preferences?: string[] | null
+          gender?: string | null
           id?: string
           initial_context?: string | null
           interests?: string[] | null
@@ -79,6 +123,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           weekly_schedule_context?: string | null
+          weekly_schedule_grid?: Json | null
         }
         Update: {
           age?: number | null
@@ -86,7 +131,9 @@ export type Database = {
           budget?: string | null
           created_at?: string
           dietary_restrictions?: string[] | null
+          display_name?: string | null
           food_preferences?: string[] | null
+          gender?: string | null
           id?: string
           initial_context?: string | null
           interests?: string[] | null
@@ -98,6 +145,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_schedule_context?: string | null
+          weekly_schedule_grid?: Json | null
         }
         Relationships: []
       }
